@@ -18,6 +18,16 @@
         android:layout_height="@dimen/detail_height" />
 
 
+    <ImageButton
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:id="@+id/up"
+        android:layout_width="56dp"
+        android:layout_height="?actionBarSize"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/up"
+        android:src="@drawable/arrow" />
+
+
     <ScrollView
         android:id="@+id/scroll"
         android:paddingTop="352dp"

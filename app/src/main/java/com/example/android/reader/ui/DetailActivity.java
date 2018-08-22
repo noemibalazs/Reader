@@ -10,6 +10,7 @@ import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class DetailActivity extends AppCompatActivity {
     private ImageView photoDetail;
     private FloatingActionButton fButton;
     private String date;
+    private ImageButton up;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
@@ -78,6 +80,7 @@ public class DetailActivity extends AppCompatActivity {
         titleDetail = findViewById(R.id.detail_title);
         bylineDetail = findViewById(R.id.detail_byline);
         bodyDetail = findViewById(R.id.detail_body);
+        up = findViewById(R.id.up);
 
         photoDetail = findViewById(R.id.image_cover);
         Picasso.get()
@@ -107,6 +110,15 @@ public class DetailActivity extends AppCompatActivity {
                             + "<br/>" + " by "
                             + author ));
         }
+
+
+        up.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onSupportNavigateUp();
+            }
+        });
+
 
 
     }
