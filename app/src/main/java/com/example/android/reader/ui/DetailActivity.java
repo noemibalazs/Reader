@@ -1,16 +1,22 @@
 package com.example.android.reader.ui;
 
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ShareCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -21,22 +27,20 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import com.example.android.reader.database.ArticleContract.ArticleEntry;
 
-public class DetailActivity extends AppCompatActivity {
-
-    public static final String TITLE = "title";
-    public static final String AUTHOR = "author";
-    public static final String DATE = "date";
-    public static final String PHOTO = "photo";
-    public static final String BODY = "body";
+public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private TextView titleDetail;
     private TextView bylineDetail;
     private TextView bodyDetail;
     private ImageView photoDetail;
     private FloatingActionButton fButton;
-    private String date;
-    private ImageButton up;
+    private String dateString;
+    private Uri mCurrentUri;
+
+    private static final int LOAD_ID = 3;
+
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
@@ -48,20 +52,25 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        Toolbar toolbar =  findViewById(R.id.flexible_example_toolbar);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+
         Intent intent = getIntent();
+        mCurrentUri = intent.getData();
 
-        if (intent == null){
-            finish();
-        }
+        titleDetail = findViewById(R.id.detail_title);
+        bylineDetail = findViewById(R.id.detail_byline);
+        bodyDetail = findViewById(R.id.detail_body);
 
-        final String title = intent.getStringExtra(TITLE);
-        String author = intent.getStringExtra(AUTHOR);
-        final String body = intent.getStringExtra(BODY);
-        date = intent.getStringExtra(DATE);
-        String photo = intent.getStringExtra(PHOTO);
+        photoDetail = findViewById(R.id.image_cover);
 
-        Typeface typeface = Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf");
-
+        LoaderManager manager = getLoaderManager();
+        manager.initLoader(LOAD_ID, null, this);
 
         fButton = findViewById(R.id.fab_button);
         fButton.setOnClickListener(new View.OnClickListener() {
@@ -69,68 +78,102 @@ public class DetailActivity extends AppCompatActivity {
             public void onClick(View v) {
                 startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(DetailActivity.this)
                         .setType("text/plain")
-                        .setChooserTitle(title)
-                        .setText(body)
+                        .setText("Some text")
                         .getIntent(), getString(R.string.action_share))
                 );
             }
         });
 
+    }
 
-        titleDetail = findViewById(R.id.detail_title);
-        bylineDetail = findViewById(R.id.detail_byline);
-        bodyDetail = findViewById(R.id.detail_body);
-        up = findViewById(R.id.up);
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        photoDetail = findViewById(R.id.image_cover);
-        Picasso.get()
-                .load(photo)
-                .placeholder(R.drawable.ec)
-                .error(R.drawable.ec)
-                .into(photoDetail);
+        String [] projection = new String[]{
+                ArticleEntry.ID,
+                ArticleEntry.TITLE,
+                ArticleEntry.AUTHOR,
+                ArticleEntry.BODY,
+                ArticleEntry.THUMB,
+                ArticleEntry.PHOTO,
+                ArticleEntry.DATE
+        };
+        return new CursorLoader(DetailActivity.this, mCurrentUri, projection, null, null, null);
+    }
 
-        titleDetail.setText(title);
-        bodyDetail.setText(body);
-        bodyDetail.setTypeface(typeface);
-
-        Date publishedDate = dateFormat();
-
-        if (!publishedDate.before(START_OF_EPOCH.getTime())) {
-
-            bylineDetail.setText(Html.fromHtml(
-                    DateUtils.getRelativeTimeSpanString(
-                            publishedDate.getTime(),
-                            System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
-                            DateUtils.FORMAT_ABBREV_ALL).toString()
-                            + "<br/>" + " by "
-                            + author ));
-        } else {
-            bylineDetail.setText(Html.fromHtml(
-                    outputFormat.format(publishedDate)
-                            + "<br/>" + " by "
-                            + author ));
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data==null || data.getCount() < 1){
+            return;
         }
 
+        if (data.moveToFirst()){
 
-        up.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onSupportNavigateUp();
+            int titleIndex = data.getColumnIndex(ArticleEntry.TITLE);
+            int authorIndex = data.getColumnIndex(ArticleEntry.AUTHOR);
+            int bodyIndex = data.getColumnIndex(ArticleEntry.BODY);
+            int photoIndex = data.getColumnIndex(ArticleEntry.PHOTO);
+            int dateIndex = data.getColumnIndex(ArticleEntry.DATE);
+
+            String titleString = data.getString(titleIndex);
+            String authorString = data.getString(authorIndex);
+            String bodyString = data.getString(bodyIndex);
+            String photoString = data.getString(photoIndex);
+            dateString = data.getString(dateIndex);
+
+            Picasso.get()
+                    .load(photoString)
+                    .placeholder(R.drawable.ec)
+                    .error(R.drawable.ec)
+                    .into(photoDetail);
+
+            Typeface typeface = Typeface.createFromAsset(getBaseContext().getAssets(), "Rosario-Regular.ttf");
+
+            titleDetail.setText(titleString);
+            bodyDetail.setText(bodyString);
+            bodyDetail.setTypeface(typeface);
+
+
+            Date publishedDate = dateFormat();
+
+            if (!publishedDate.before(START_OF_EPOCH.getTime())) {
+
+                bylineDetail.setText(Html.fromHtml(
+                        DateUtils.getRelativeTimeSpanString(
+                                publishedDate.getTime(),
+                                System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                                DateUtils.FORMAT_ABBREV_ALL).toString()
+                                + "<br/>" + " by "
+                                + authorString ));
+            } else {
+                bylineDetail.setText(Html.fromHtml(
+                        outputFormat.format(publishedDate)
+                                + "<br/>" + " by "
+                                + authorString ));
             }
-        });
 
 
+        }
 
     }
 
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
+
     private Date dateFormat(){
         try{
-            return dateFormat.parse(date);
+            return dateFormat.parse(dateString);
         } catch (ParseException ex) {
             Log.e("TAG", ex.getMessage());
             Log.i("TAG", "passing today's date");
             return new Date();
         }
     }
+
+
+
 
 }

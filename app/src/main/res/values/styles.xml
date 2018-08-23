@@ -9,4 +9,10 @@
         <item name="cardViewStyle">@style/CardView</item>
 
     </style>
+
+
+    <style name="ToolBarWithNavigationBack">
+        <item name="navigationIcon">@drawable/arrow</item>
+    </style>
+
 </resources>

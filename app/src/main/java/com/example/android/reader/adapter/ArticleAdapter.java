@@ -1,5 +1,6 @@
 package com.example.android.reader.adapter;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +18,6 @@ import android.widget.TextView;
 
 import com.example.android.reader.R;
 import com.example.android.reader.data.Article;
-import com.example.android.reader.database.ArticleContract;
 import com.example.android.reader.database.ArticleContract.ArticleEntry;
 import com.example.android.reader.ui.DetailActivity;
 import com.squareup.picasso.Picasso;
@@ -104,13 +104,11 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ArticleV
                 Uri uri = mContext.getContentResolver().insert(ArticleEntry.CONTENT_URI, values);
                 Log.v("TAG", "New uri was inserted " + uri);
 
-                Intent intent = new Intent(mContext, DetailActivity.class);
-                intent.putExtra(DetailActivity.TITLE, title);
-                intent.putExtra(DetailActivity.AUTHOR, author);
-                intent.putExtra(DetailActivity.DATE, date);
-                intent.putExtra(DetailActivity.BODY, body);
-                intent.putExtra(DetailActivity.PHOTO, photo);
-                mContext.startActivity(intent);
+
+                Intent i = new Intent(mContext, DetailActivity.class);
+                Uri contentUri = ContentUris.withAppendedId(ArticleEntry.CONTENT_URI, id);
+                i.setData(contentUri);
+                mContext.startActivity(i);
             }
         });
 

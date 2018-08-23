@@ -16,21 +16,23 @@
         <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.DetailActivity"
+        <activity
+            android:name=".ui.DetailActivity"
             android:parentActivityName=".ui.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="ui.MainActivity"/>
+                android:value="ui.MainActivity" />
         </activity>
 
         <provider
-            android:authorities="com.example.android.reader"
             android:name=".database.ArticleProvider"
-            android:exported="false"/>
+            android:authorities="com.example.android.reader"
+            android:exported="false" />
 
     </application>
 
